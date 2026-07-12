@@ -12,7 +12,7 @@
 
 use windows::Win32::Graphics::Gdi::LOGFONTW;
 use windows::Win32::UI::Controls::Dialogs::{
-    ChooseFontW, CF_EFFECTS, CF_INITTOLOGFONT, CF_SCREENFONTS, CHOOSEFONTW,
+    CF_EFFECTS, CF_INITTOLOGFONT, CF_SCREENFONTS, CHOOSEFONTW, ChooseFontW,
 };
 
 use crate::{FontDialogBackend, FontSelection};
@@ -32,12 +32,11 @@ impl FontDialogBackend for WindowsBackend {
             populate_log_font(&mut log_font, initial);
         }
 
-        let mut choose_font = CHOOSEFONTW {
-            lStructSize: std::mem::size_of::<CHOOSEFONTW>() as u32,
-            lpLogFont: &mut log_font,
-            Flags: CF_SCREENFONTS | CF_EFFECTS | CF_INITTOLOGFONT,
-            ..Default::default()
-        };
+        let mut choose_font =
+            CHOOSEFONTW { lStructSize: std::mem::size_of::<CHOOSEFONTW>() as u32,
+                          lpLogFont: &mut log_font,
+                          Flags: CF_SCREENFONTS | CF_EFFECTS | CF_INITTOLOGFONT,
+                          ..Default::default() };
 
         // SAFETY: `choose_font.lpLogFont` points at `log_font`, a valid,
         // stack-allocated `LOGFONTW` that outlives this call; `choose_font`
@@ -68,16 +67,16 @@ fn populate_log_font(log_font: &mut LOGFONTW, selection: &FontSelection) {
 /// [`FontSelection`]. `point_size` is `CHOOSEFONTW::iPointSize`, in tenths of
 /// a point (e.g. `120` means 12pt).
 fn log_font_to_selection(log_font: &LOGFONTW, point_size: i32) -> FontSelection {
-    let nul_pos =
-        log_font.lfFaceName.iter().position(|&c| c == 0).unwrap_or(log_font.lfFaceName.len());
+    let nul_pos = log_font.lfFaceName
+                          .iter()
+                          .position(|&c| c == 0)
+                          .unwrap_or(log_font.lfFaceName.len());
     let family = String::from_utf16_lossy(&log_font.lfFaceName[..nul_pos]);
 
-    FontSelection {
-        family,
-        size: f32::from(point_size as i16) / 10.0,
-        bold: log_font.lfWeight >= FW_BOLD,
-        italic: log_font.lfItalic != 0,
-    }
+    FontSelection { family,
+                    size: f32::from(point_size as i16) / 10.0,
+                    bold: log_font.lfWeight >= FW_BOLD,
+                    italic: log_font.lfItalic != 0 }
 }
 
 #[cfg(test)]
@@ -87,8 +86,10 @@ mod tests {
     #[test]
     fn populate_log_font_sets_bold_weight_and_italic_flag() {
         let mut log_font = LOGFONTW::default();
-        let selection =
-            FontSelection { family: "Segoe UI".to_string(), size: 12.0, bold: true, italic: true };
+        let selection = FontSelection { family: "Segoe UI".to_string(),
+                                        size:   12.0,
+                                        bold:   true,
+                                        italic: true, };
 
         populate_log_font(&mut log_font, &selection);
 
@@ -99,8 +100,10 @@ mod tests {
     #[test]
     fn populate_log_font_writes_face_name_as_nul_terminated_utf16() {
         let mut log_font = LOGFONTW::default();
-        let selection =
-            FontSelection { family: "Arial".to_string(), size: 10.0, bold: false, italic: false };
+        let selection = FontSelection { family: "Arial".to_string(),
+                                        size:   10.0,
+                                        bold:   false,
+                                        italic: false, };
 
         populate_log_font(&mut log_font, &selection);
 
@@ -112,12 +115,10 @@ mod tests {
     #[test]
     fn log_font_to_selection_reads_back_family_size_and_style() {
         let mut log_font = LOGFONTW::default();
-        let selection = FontSelection {
-            family: "Times New Roman".to_string(),
-            size: 14.0,
-            bold: true,
-            italic: false,
-        };
+        let selection = FontSelection { family: "Times New Roman".to_string(),
+                                        size:   14.0,
+                                        bold:   true,
+                                        italic: false, };
         populate_log_font(&mut log_font, &selection);
 
         let result = log_font_to_selection(&log_font, 140);

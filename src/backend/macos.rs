@@ -16,7 +16,7 @@ use std::cell::Cell;
 use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
 use objc2::{
-    define_class, msg_send, sel, AnyThread, DefinedClass, MainThreadMarker, MainThreadOnly,
+    AnyThread, DefinedClass, MainThreadMarker, MainThreadOnly, define_class, msg_send, sel,
 };
 use objc2_app_kit::{
     NSApplication, NSButton, NSFontManager, NSFontTraitMask, NSWindowWillCloseNotification,
@@ -65,7 +65,7 @@ struct DoneSignalIvars {
 
 impl DoneSignal {
     fn new() -> Retained<Self> {
-        let this = Self::alloc().set_ivars(DoneSignalIvars { confirmed: Cell::new(false) });
+        let this = Self::alloc().set_ivars(DoneSignalIvars { confirmed: Cell::new(false), });
         // SAFETY: `NSObject::init` has no preconditions beyond a freshly
         // allocated, not-yet-initialized instance, which `this` is.
         unsafe { msg_send![super(this), init] }
@@ -126,8 +126,10 @@ impl FontDialogBackend for MacOsBackend {
         panel.setAccessoryView(None);
 
         if signal.ivars().confirmed.get() {
-            font_manager.selectedFont().map(|font| font_to_selection(&font_manager, &font))
-        } else {
+            font_manager.selectedFont()
+                        .map(|font| font_to_selection(&font_manager, &font))
+        }
+        else {
             None
         }
     }
@@ -136,10 +138,8 @@ impl FontDialogBackend for MacOsBackend {
 /// Builds the "Done" accessory button, wired to call `signal`'s
 /// `buttonClicked:` method.
 fn build_done_button(signal: &Retained<DoneSignal>, mtm: MainThreadMarker) -> Retained<NSButton> {
-    let frame = objc2_foundation::NSRect::new(
-        objc2_foundation::NSPoint::new(0.0, 0.0),
-        objc2_foundation::NSSize::new(72.0, 32.0),
-    );
+    let frame = objc2_foundation::NSRect::new(objc2_foundation::NSPoint::new(0.0, 0.0),
+                                              objc2_foundation::NSSize::new(72.0, 32.0));
     let button = NSButton::initWithFrame(NSButton::alloc(mtm), frame);
     button.setTitle(&NSString::from_str("Done"));
     // SAFETY: `signal` outlives `button` for the duration of `show()` (both
@@ -155,10 +155,8 @@ fn build_done_button(signal: &Retained<DoneSignal>, mtm: MainThreadMarker) -> Re
 /// Resolves an `NSFont` matching `selection`'s family/size/style, via
 /// `NSFontManager::fontWithFamily_traits_weight_size` so bold/italic can be
 /// expressed independently of the family name string.
-fn build_ns_font(
-    font_manager: &NSFontManager,
-    selection: &FontSelection,
-) -> Option<Retained<objc2_app_kit::NSFont>> {
+fn build_ns_font(font_manager: &NSFontManager, selection: &FontSelection)
+                 -> Option<Retained<objc2_app_kit::NSFont>> {
     let mut traits = NSFontTraitMask::empty();
     if selection.bold {
         traits |= NSFontTraitMask::BoldFontMask;
@@ -169,25 +167,21 @@ fn build_ns_font(
     // 5 is NSFontManager's "regular" weight; bold is expressed via `traits`
     // rather than a heavier weight value here, matching how `traitsOfFont`/
     // `weightOfFont` are read back symmetrically in `font_to_selection`.
-    font_manager.fontWithFamily_traits_weight_size(
-        &NSString::from_str(&selection.family),
-        traits,
-        5,
-        f64::from(selection.size),
-    )
+    font_manager.fontWithFamily_traits_weight_size(&NSString::from_str(&selection.family),
+                                                   traits,
+                                                   5,
+                                                   f64::from(selection.size))
 }
 
 /// Translates an `NSFont` back into a [`FontSelection`], reading style via
 /// `NSFontManager::traitsOfFont` rather than parsing the font's display name.
 fn font_to_selection(font_manager: &NSFontManager, font: &objc2_app_kit::NSFont) -> FontSelection {
     let traits = font_manager.traitsOfFont(font);
-    FontSelection {
-        family: font.familyName().map(|s| s.to_string()).unwrap_or_default(),
-        // NSFont point sizes are small (well under f32's integer-precision
-        // limit), so this narrowing cast never loses meaningful precision.
-        #[allow(clippy::cast_possible_truncation)]
-        size: font.pointSize() as f32,
-        bold: traits.contains(NSFontTraitMask::BoldFontMask),
-        italic: traits.contains(NSFontTraitMask::ItalicFontMask),
-    }
+    FontSelection { family: font.familyName().map(|s| s.to_string()).unwrap_or_default(),
+                    // NSFont point sizes are small (well under f32's integer-precision
+                    // limit), so this narrowing cast never loses meaningful precision.
+                    #[allow(clippy::cast_possible_truncation)]
+                    size: font.pointSize() as f32,
+                    bold: traits.contains(NSFontTraitMask::BoldFontMask),
+                    italic: traits.contains(NSFontTraitMask::ItalicFontMask), }
 }

@@ -28,7 +28,7 @@ use std::rc::Rc;
 use gtk4::glib::MainContext;
 use gtk4::pango::{FontDescription, Style, Weight};
 use gtk4::prelude::*;
-use gtk4::{gio, FontDialog as GtkFontDialog};
+use gtk4::{FontDialog as GtkFontDialog, gio};
 
 use crate::{FontDialogBackend, FontSelection};
 
@@ -42,21 +42,22 @@ impl FontDialogBackend for LinuxBackend {
         let result: Rc<RefCell<Option<Option<FontDescription>>>> = Rc::new(RefCell::new(None));
         let result_for_callback = Rc::clone(&result);
 
-        dialog.choose_font(
-            gtk4::Window::NONE,
-            initial_desc.as_ref(),
-            gio::Cancellable::NONE,
-            move |chosen| {
-                *result_for_callback.borrow_mut() = Some(chosen.ok());
-            },
-        );
+        dialog.choose_font(gtk4::Window::NONE,
+                           initial_desc.as_ref(),
+                           gio::Cancellable::NONE,
+                           move |chosen| {
+                               *result_for_callback.borrow_mut() = Some(chosen.ok());
+                           });
 
         let main_context = MainContext::default();
         while result.borrow().is_none() {
             main_context.iteration(true);
         }
 
-        result.borrow_mut().take().flatten().map(|desc| font_description_to_selection(&desc))
+        result.borrow_mut()
+              .take()
+              .flatten()
+              .map(|desc| font_description_to_selection(&desc))
     }
 }
 
@@ -66,20 +67,28 @@ fn selection_to_font_description(selection: &FontSelection) -> FontDescription {
     let mut desc = FontDescription::new();
     desc.set_family(&selection.family);
     desc.set_size(font_size_to_pango_units(selection.size));
-    desc.set_weight(if selection.bold { Weight::Bold } else { Weight::Normal });
-    desc.set_style(if selection.italic { Style::Italic } else { Style::Normal });
+    desc.set_weight(if selection.bold {
+                        Weight::Bold
+                    }
+                    else {
+                        Weight::Normal
+                    });
+    desc.set_style(if selection.italic {
+                       Style::Italic
+                   }
+                   else {
+                       Style::Normal
+                   });
     desc
 }
 
 /// Translates a confirmed `pango::FontDescription` back into a
 /// [`FontSelection`].
 fn font_description_to_selection(desc: &FontDescription) -> FontSelection {
-    FontSelection {
-        family: desc.family().map(|f| f.to_string()).unwrap_or_default(),
-        size: pango_units_to_font_size(desc.size()),
-        bold: desc.weight() >= Weight::Bold,
-        italic: matches!(desc.style(), Style::Italic | Style::Oblique),
-    }
+    FontSelection { family: desc.family().map(|f| f.to_string()).unwrap_or_default(),
+                    size:   pango_units_to_font_size(desc.size()),
+                    bold:   desc.weight() >= Weight::Bold,
+                    italic: matches!(desc.style(), Style::Italic | Style::Oblique), }
 }
 
 /// Pango sizes are in "Pango units" — 1024ths of a point.
@@ -105,8 +114,10 @@ mod tests {
 
     #[test]
     fn selection_to_font_description_sets_bold_and_italic() {
-        let selection =
-            FontSelection { family: "Noto Sans".to_string(), size: 11.0, bold: true, italic: true };
+        let selection = FontSelection { family: "Noto Sans".to_string(),
+                                        size:   11.0,
+                                        bold:   true,
+                                        italic: true, };
         let desc = selection_to_font_description(&selection);
         assert_eq!(desc.weight(), Weight::Bold);
         assert_eq!(desc.style(), Style::Italic);
@@ -114,12 +125,10 @@ mod tests {
 
     #[test]
     fn font_description_to_selection_reads_back_family_size_and_style() {
-        let selection = FontSelection {
-            family: "DejaVu Sans".to_string(),
-            size: 10.0,
-            bold: false,
-            italic: false,
-        };
+        let selection = FontSelection { family: "DejaVu Sans".to_string(),
+                                        size:   10.0,
+                                        bold:   false,
+                                        italic: false, };
         let desc = selection_to_font_description(&selection);
         let result = font_description_to_selection(&desc);
 

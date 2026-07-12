@@ -19,15 +19,15 @@
 //! # Platform notes
 //!
 //! - **Linux**: the GTK4 backend requires the embedding application to have
-//!   already called `gtk4::init()` before [`FontDialog::show`] is invoked.
-//!   This crate does not call it on the caller's behalf, since doing so
-//!   twice (once here, once in an app that also uses GTK4 directly) is
-//!   itself an error in some GTK4 versions.
+//!   already called `gtk4::init()` before [`FontDialog::show`] is invoked. This
+//!   crate does not call it on the caller's behalf, since doing so twice (once
+//!   here, once in an app that also uses GTK4 directly) is itself an error in
+//!   some GTK4 versions.
 //! - **macOS**: `NSFontPanel` is natively a persistent, non-modal floating
 //!   panel with no built-in "OK" button. This crate's backend adds a small
-//!   "Done" affordance and runs the panel modally so `show()` can still
-//!   return a single confirmed-or-cancelled result, matching this crate's
-//!   API on every platform.
+//!   "Done" affordance and runs the panel modally so `show()` can still return
+//!   a single confirmed-or-cancelled result, matching this crate's API on every
+//!   platform.
 
 #![warn(clippy::pedantic, clippy::nursery, missing_docs, rust_2018_idioms)]
 #![deny(unsafe_op_in_unsafe_fn)]
@@ -45,9 +45,9 @@ pub struct FontSelection {
     /// The chosen font family name (e.g. `"Helvetica Neue"`).
     pub family: String,
     /// The chosen point size.
-    pub size: f32,
+    pub size:   f32,
     /// Whether the chosen style includes bold.
-    pub bold: bool,
+    pub bold:   bool,
     /// Whether the chosen style includes italic.
     pub italic: bool,
 }
@@ -111,8 +111,10 @@ mod tests {
 
     #[test]
     fn initial_stores_the_given_selection() {
-        let selection =
-            FontSelection { family: "Georgia".to_string(), size: 12.0, bold: false, italic: true };
+        let selection = FontSelection { family: "Georgia".to_string(),
+                                        size:   12.0,
+                                        bold:   false,
+                                        italic: true, };
 
         let dialog = FontDialog::new().initial(selection.clone());
 
