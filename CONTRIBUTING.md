@@ -30,6 +30,12 @@ Run these before opening a PR — CI enforces all three. This crate targets macO
 can only build on one platform, say so in the PR and a maintainer will validate the others via the PR
 Validation workflow.
 
+## Branching
+
+This project follows Git Flow. Branch feature work off `develop` as `feature/<name>` and open the PR
+against `develop`, not `master`. `master` only receives merges from `release/*` branches — see
+[RELEASE.md](RELEASE.md) for how those are cut.
+
 ## Pull requests
 
 - Keep PRs focused on a single change

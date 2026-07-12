@@ -22,6 +22,7 @@ jobs:
 
       - uses: actions/checkout@v7
         with:
+          ref: develop
           fetch-depth: 0 # full history required for git-cliff
           fetch-tags: true
           show-progress: true
@@ -54,9 +55,12 @@ jobs:
       # `peter-evans/create-pull-request` (used here previously) cherry-picks
       # only the *uncommitted working-tree diff* as a single synthetic commit
       # onto `base`, rather than merging/rebasing the checked-out branch's
-      # actual history. Branching `release/<version>` directly off `master`'s
-      # tip (below) preserves the full commit history, so the PR is a real,
-      # complete diff.
+      # actual history. Since this job checks out `develop`, that would mean
+      # the release PR against `master` carries only the version-bump/
+      # changelog commit and silently drops every real commit `develop` is
+      # ahead of `master` by. Branching `release/<version>` directly off
+      # `develop`'s tip (below) preserves the full commit history, so the PR
+      # against `master` is a real, complete diff.
       - name: Push release branch
         id: push_branch
         env:
@@ -72,7 +76,7 @@ jobs:
           if git diff --quiet -- Cargo.toml Cargo.lock CHANGELOG.md; then
             echo "::error::Nothing to release at version ${{ steps.version.outputs.version }}."
             echo "::error::git-cliff computed this as the next version, but Cargo.toml and CHANGELOG.md already match what this run would have produced."
-            echo "::error::Likely causes: (1) no new conventional commits (feat:/fix:/etc.) have landed on master since the last release; or (2) no git tag exists yet for a prior release, so git-cliff cannot compute a version relative to history and keeps recomputing the same fallback version on every run (see 'Determine next version' step output above)."
+            echo "::error::Likely causes: (1) no new conventional commits (feat:/fix:/etc.) have landed on develop since the last release; or (2) no git tag exists yet for a prior release, so git-cliff cannot compute a version relative to history and keeps recomputing the same fallback version on every run (see 'Determine next version' step output above)."
             echo "::error::If (2), a git tag needs to be created for the most recent release before this workflow can advance past ${{ steps.version.outputs.version }}."
             exit 1
           fi
