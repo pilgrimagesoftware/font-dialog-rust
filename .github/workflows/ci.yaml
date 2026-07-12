@@ -11,45 +11,57 @@ permissions:
 concurrency: ci
 
 jobs:
-  test:
+  fmt:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-          show-progress: true
-
-      - name: Install GTK4 dev headers
-        id: install_gtk
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-4-dev
-
+      - uses: actions/checkout@v7
       - name: Install Rust
-        id: install_rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
-
-      - name: Setup Rust cache
-        id: rust_cache
-        uses: Swatinem/rust-cache@v2
-
+          components: rustfmt
       - name: Check formatting
-        id: check_fmt
-        run: |
-          cargo fmt --check
+        run: cargo fmt --all -- --check
 
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
       - name: Clippy
-        id: clippy
-        run: |
-          cargo clippy --all-targets --all-features -- -D warnings
-
+        run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Test
-        id: test
-        run: |
-          cargo test --all-features
+        run: cargo test --all-features
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Test
+        run: cargo test --all-features
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install GTK4 development headers
+        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Test
+        run: cargo test --all-features
