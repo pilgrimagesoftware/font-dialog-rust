@@ -1,8 +1,8 @@
 [package]
 name = "font-dialog"
-version = "0.1.0"
-edition = "2021"
-rust-version = "1.80"
+version = "0.0.1"
+edition = "2024"
+rust-version = "1.95"
 license = "MIT"
 description = "OS-native font picker dialogs (macOS NSFontPanel, Windows ChooseFont, Linux GTK4 FontDialog) behind one Rust API"
 repository = "https://github.com/pilgrimagesoftware/font-dialog-rust"
