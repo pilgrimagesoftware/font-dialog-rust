@@ -1,5 +1,10 @@
 # font-dialog
 
+[![Crates.io](https://img.shields.io/crates/v/font-dialog.svg)](https://crates.io/crates/font-dialog)
+[![docs.rs](https://img.shields.io/docsrs/font-dialog)](https://docs.rs/font-dialog)
+[![CI](https://github.com/pilgrimagesoftware/font-dialog-rust/actions/workflows/ci.yaml/badge.svg)](https://github.com/pilgrimagesoftware/font-dialog-rust/actions/workflows/ci.yaml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 OS-native font picker dialogs behind one cross-platform Rust API — the same
 role `rfd` plays for file/folder dialogs, for fonts instead.
 
@@ -31,6 +36,11 @@ dialog-showing behavior itself is always manually verified per platform
 before release, not covered by automated tests — automated tests cover the
 pure data-translation logic only (`LOGFONTW`/`FontDescription` ↔
 `FontSelection`, and `FontDialog`'s builder methods).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, [SECURITY.md](SECURITY.md) to report a
+vulnerability, and [RELEASE.md](RELEASE.md) for how releases are cut.
 
 ## License
 
